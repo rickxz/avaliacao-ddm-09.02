@@ -3,6 +3,8 @@ package ads.pdm.avaliacaoddm0912;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -17,8 +19,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Button btnAdicionar;
     private ListView listaProdutos;
-    private ArrayList<Produto> produtos = new ArrayList<>();
-    private AdapterProdutos adapter;
+    AdapterProdutos adapter;
+    SQLiteDatabase bd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,11 +29,17 @@ public class MainActivity extends AppCompatActivity {
         btnAdicionar = findViewById(R.id.btnAdicionar);
         listaProdutos = findViewById(R.id.listaProdutos);
         btnAdicionar.setOnClickListener(new btnListener());
-        adapter = new AdapterProdutos(this, produtos);
-        listaProdutos.setAdapter(adapter);
         listaListener listaListener = new listaListener();
         listaProdutos.setOnItemClickListener(listaListener);
         listaProdutos.setOnItemLongClickListener(listaListener);
+        bd = openOrCreateDatabase("produtos", MODE_PRIVATE, null);
+        String query = "create table if not exists produtos";
+        query += "(nome varchar, marca varchar, quantidade varchar, comprado varchar)";
+        bd.execSQL(query);
+
+        Cursor cursor = bd.rawQuery("SELECT _rowid_ _id, nome, marca, quantidade, comprado from produtos", null);
+        adapter = new AdapterProdutos(this, cursor);
+        listaProdutos.setAdapter(adapter);
     }
 
     private class btnListener implements View.OnClickListener {
@@ -49,30 +57,48 @@ public class MainActivity extends AppCompatActivity {
                 String nome = intent.getStringExtra("nome");
                 String marca = intent.getStringExtra("marca");
                 String quantidade = intent.getStringExtra("quantidade");
-                Produto produto = new Produto(nome, marca, quantidade);
-                produtos.add(produto);
-                adapter.notifyDataSetChanged();
+                String query = "insert into produtos(nome, marca, quantidade, comprado) values('";
+                query += nome;
+                query += "', '";
+                query += marca;
+                query += "', '";
+                query += quantidade;
+                query += "', '";
+                query += "')";
+                bd.execSQL(query);
+
+                Cursor cursor = bd.rawQuery("select _rowid_ _id, nome, marca, quantidade, comprado from produtos", null);
+                adapter.changeCursor(cursor);
             }
         }
     }
 
     private class listaListener implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
-
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-            Produto produto = produtos.get(i);
-            if (produto.getComprado().equals("")) {
-                produto.setComprado("* COMPRADO *");
+            Cursor cursor = (Cursor) adapter.getItem(i);
+            String id = cursor.getString(cursor.getColumnIndexOrThrow("_id"));
+            String comprado = cursor.getString(cursor.getColumnIndexOrThrow("comprado"));
+            String query;
+            if (comprado.equals("")) {
+                query = "update produtos set comprado = " + "'*COMPRADO*'" + " where _rowid_ = " + id;
             } else {
-                produto.setComprado("");
+                query = "update produtos set comprado = " + "''" + " where _rowid_ = " + id;
             }
-            adapter.notifyDataSetChanged();
+
+            bd.execSQL(query);
+            cursor = bd.rawQuery("select _rowid_ _id, nome, marca, quantidade, comprado from produtos", null);
+            adapter.changeCursor(cursor);
         }
 
         @Override
         public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-            produtos.remove(i);
-            adapter.notifyDataSetChanged();
+            Cursor cursor = (Cursor) adapter.getItem(i);
+            String id = cursor.getString(cursor.getColumnIndexOrThrow("_id"));
+            String query = "delete from produtos where _rowid_ = " + id;
+            bd.execSQL(query);
+            cursor = bd.rawQuery("select _rowid_ _id, nome, marca, quantidade, comprado from produtos", null);
+            adapter.changeCursor(cursor);
             Toast.makeText(MainActivity.this, "Produto apagado com sucesso!", Toast.LENGTH_LONG).show();
             return true;
         }

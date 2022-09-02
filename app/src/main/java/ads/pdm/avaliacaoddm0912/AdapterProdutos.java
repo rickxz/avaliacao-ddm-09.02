@@ -1,39 +1,47 @@
 package ads.pdm.avaliacaoddm0912;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import androidx.cursoradapter.widget.CursorAdapter;
+
 import java.util.ArrayList;
 
-public class AdapterProdutos extends ArrayAdapter<Produto> {
+public class AdapterProdutos extends CursorAdapter {
     private Context context;
-    private ArrayList<Produto> produtos;
 
-    public AdapterProdutos(Context context, ArrayList<Produto> produtos) {
-        super(context, R.layout.item_lista, produtos);
-        this.context = context;
-        this.produtos = produtos;
+    public AdapterProdutos(Context context, Cursor cursor) {
+        super(context, cursor, 0);
+    }
+
+
+    @Override
+    public View newView(Context context, Cursor cursor, ViewGroup parent) {
+        LayoutInflater li = LayoutInflater.from(context);
+        View item_lista = li.inflate(R.layout.item_lista, parent, false);
+        return item_lista;
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        LayoutInflater li = LayoutInflater.from(parent.getContext());
-        View itemView = li.inflate(R.layout.item_lista, parent, false);
+    public void bindView(View view, Context context, Cursor cursor) {
+        TextView lblNome = view.findViewById(R.id.lblNome);
+        TextView lblMarca = view.findViewById(R.id.lblMarca);
+        TextView lblQuantidade = view.findViewById(R.id.lblQuantidade);
+        TextView lblComprado = view.findViewById(R.id.lblComprado);
 
-        TextView lblNome = itemView.findViewById(R.id.lblNome);
-        TextView lblMarca = itemView.findViewById(R.id.lblMarca);
-        TextView lblQuantidade = itemView.findViewById(R.id.lblQuantidade);
-        TextView lblComprado = itemView.findViewById(R.id.lblComprado);
+        String nome = cursor.getString(cursor.getColumnIndexOrThrow("nome"));
+        String marca = cursor.getString(cursor.getColumnIndexOrThrow("marca"));
+        String quantidade = cursor.getString(cursor.getColumnIndexOrThrow("quantidade"));
+        String comprado = cursor.getString(cursor.getColumnIndexOrThrow("comprado"));
 
-        lblNome.setText(produtos.get(position).getNome());
-        lblMarca.setText(produtos.get(position).getMarca());
-        lblQuantidade.setText(produtos.get(position).getQuantidade());
-        lblComprado.setText(produtos.get(position).getComprado());
-        return itemView;
-
+        lblNome.setText(nome);
+        lblMarca.setText(marca);
+        lblQuantidade.setText(quantidade);
+        lblComprado.setText(comprado);
     }
 }

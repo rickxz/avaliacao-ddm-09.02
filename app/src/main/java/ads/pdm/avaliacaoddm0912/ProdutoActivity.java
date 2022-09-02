@@ -39,7 +39,7 @@ public class ProdutoActivity extends AppCompatActivity {
                 case R.id.btnInserir:
                     String nome = txtNome.getText().toString();
                     String marca = txtMarca.getText().toString();
-                    String quantidade = txtMarca.getText().toString();
+                    String quantidade = txtQuantidade.getText().toString();
                     Intent intent = new Intent();
                     intent.putExtra("nome", nome);
                     intent.putExtra("marca", marca);
